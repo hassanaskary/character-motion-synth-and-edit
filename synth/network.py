@@ -32,16 +32,29 @@ class Core(nn.Module):
                 nn.ReLU()
                 )
 
-    def forward(self, x, unpool_indices=0, decode=False):
+    def forward(self, x, unpool_indices=0, decode=False, encode=False):
+        # when RECONSTRUCTING only provide input tensor. leave all other
+        # arguments as is
+
+        # when DECODING provide input tensor, indices, and set decode to True
+        # leave encode to be False
+
+        # when ENCODING provide input tensor, and set encode to True, leave 
+        # the rest as is
         if decode:
             x = self.unpool(x, unpool_indices)
             x = self.decoder(x)
+            return x
+        elif encode:
+            x = self.encoder(x)
+            x, indices = self.pool(x)
+            return x, indices
         else:
             x = self.encoder(x)
             x, indices = self.pool(x)
             x = self.unpool(x, indices)
             x = self.decoder(x)
-        return x
+            return x
 
 class Regressor(nn.Module):
     def __init__(self, input_channels, indices):
