@@ -70,8 +70,11 @@ def foot_constraint(Xtrsf_H, V, labels):
             A[:,:,2:3]*B[:,:,0:1] - A[:,:,0:1]*B[:,:,2:3],
             A[:,:,0:1]*B[:,:,1:2] - A[:,:,1:2]*B[:,:,0:1]
         ], dim=2)
+
+    neg_V = torch.unsqueeze(-V[:,-5], 1)
+    neg_V = torch.unsqueeze(neg_V, 1)
     
-    # rotation = -V[:,-5].dimshuffle(0,'x','x',1) * cross(np.array([[[0,1,0]]]), offsets)
+    rotation = neg_V * cross(torch.tensor([[[0,1,0]]]), offsets)
     
     # velocity_scale = 10
     # cost_feet_x = velocity_scale * T.mean(contact[:,:,:-1] * (((V[:,feet[:,0],1:] - V[:,feet[:,0],:-1]) + V[:,-7,:-1].dimshuffle(0,'x',1) + rotation[:,:,0,:-1])**2))
