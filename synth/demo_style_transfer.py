@@ -52,16 +52,62 @@ def styletransfer(H, g_phi_S, phi_C, style_amount):
     s, c =  style_amount, 1.0
     s, c = s / (s + c), c / (s + c)
     g_H = compute_gram(H)
-    Xtrsf = s * torch.pow(torch.norm((g_phi_S - g_H), 2), 2) + c * torch.pow(torch.norm((phi_C - H), 2), 2)
-    return Xtrsf
+    loss = s * torch.pow(torch.norm((g_phi_S - g_H), 2), 2) + c * torch.pow(torch.norm((phi_C - H), 2), 2)
+    return loss
+
+def foot_constraint(Xtrsf_H, V, labels):
+    feet = torch.tensor([[12,13,14], [15,16,17],[24,25,26], [27,28,29]])
+    contact = (labels > 0.5)
+
+    offsets = torch.cat([
+        V[:,feet[:,0:1]],
+        torch.zeros((V.size(0), len(feet), 1, V.size(2))).double(),
+        V[:,feet[:,2:3]]], dim=2)
     
+    def cross(A, B):
+        return torch.cat([
+            A[:,:,1:2]*B[:,:,2:3] - A[:,:,2:3]*B[:,:,1:2],
+            A[:,:,2:3]*B[:,:,0:1] - A[:,:,0:1]*B[:,:,2:3],
+            A[:,:,0:1]*B[:,:,1:2] - A[:,:,1:2]*B[:,:,0:1]
+        ], dim=2)
+    
+    # rotation = -V[:,-5].dimshuffle(0,'x','x',1) * cross(np.array([[[0,1,0]]]), offsets)
+    
+    # velocity_scale = 10
+    # cost_feet_x = velocity_scale * T.mean(contact[:,:,:-1] * (((V[:,feet[:,0],1:] - V[:,feet[:,0],:-1]) + V[:,-7,:-1].dimshuffle(0,'x',1) + rotation[:,:,0,:-1])**2))
+    # cost_feet_z = velocity_scale * T.mean(contact[:,:,:-1] * (((V[:,feet[:,2],1:] - V[:,feet[:,2],:-1]) + V[:,-6,:-1].dimshuffle(0,'x',1) + rotation[:,:,2,:-1])**2))
+    # #cost_feet_y = T.mean(contact * ((V[:,feet[:,1]] - np.array([[0.75], [0.0], [0.75], [0.0]]))**2))
+    # cost_feet_y = velocity_scale * T.mean(contact[:,:,:-1] * ((V[:,feet[:,1],1:] - V[:,feet[:,1],:-1]) **2))
+    # cost_feet_h = 10.0 * T.mean(T.minimum(V[:,feet[:,1],1:], 0.0)**2)
+    
+    # return (cost_feet_x + cost_feet_z + cost_feet_y + cost_feet_h) / 4
+
+def bone_constraint(Xtrsf_H, V):
+    pass
+
+def traj_constraint(Xtrsf_H, V):
+    pass
+
+# eq 13 in 7.1
+def constraints(Xtrsf_H, Xtrsf_H_indices, Xtail):
+    preprocess_Xstd_torch = (torch.from_numpy(preprocess['Xstd'])).double()
+    preprocess_Xmean_torch = (torch.from_numpy(preprocess['Xmean'])).double()
+
+    V = net(Xtrsf_H, unpool_indices=Xtrsf_H_indices, decode=True)
+    V = (V * preprocess_Xstd_torch) + preprocess_Xmean_torch 
+
+    foot = foot_constraint(Xtrsf_H, V, Xtail)
+    # bone = bone_constraint(Xtrsf_H, V)
+    # traj = traj_constraint(Xtrsf_H, V)
+    # loss = foot + bone + traj
+    # return loss
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 lr = 0.01
 beta1 = 0.9
 beta2 = 0.999
 batchsize = 1
-epochs = 100
+epochs = 5 
 
 net = create_core()
 net.to(device)
@@ -88,6 +134,8 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     C = (torch.from_numpy(C)).double()
     S.to(device)
     C.to(device)
+
+    # optimizng the style function
 
     # N is white noise
     N = np.random.normal(size=C.shape)
@@ -121,4 +169,45 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     with torch.no_grad():
         Xtrsf = net(H, unpool_indices=H_indices, decode=True)
 
+    Xtrsf = Xtrsf.cpu().detach().numpy()
     Xtrsf = (Xtrsf * preprocess['Xstd']) + preprocess['Xmean']
+
+    # optimizing the foot, bone, trajectory contriants
+
+    Xtrsfvel = np.mean(np.sqrt(Xtrsf[:,-7:-6]**2 + Xtrsf[:,-6:-5]**2), axis=2)[:,:,np.newaxis]
+    Xcntnvel = np.mean(np.sqrt(Xcntn[:,-7:-6]**2 + Xcntn[:,-6:-5]**2), axis=2)[:,:,np.newaxis]
+    
+    Xtail = Xtrsfvel * (Xcntn[:,-7:] / Xcntnvel)
+    Xtail[:,-5:] = Xcntn[:,-5:]
+
+    Xtrsf = (Xtrsf - preprocess['Xmean']) / preprocess['Xstd']
+
+    Xtrsf = (torch.from_numpy(Xtrsf)).double()
+    Xtrsf.to(device)
+
+    Xtail = (torch.from_numpy(Xtail)).double()
+    Xtail.to(device)
+
+    with torch.no_grad():
+        Xtrsf_H, Xtrsf_H_indices = net(Xtrsf, encode=True)
+    
+    # we need to learn Xtrsf_H so that constraints return minimum value
+    Xtrsf_H.requires_grad_()
+
+    constraints(Xtrsf_H, Xtrsf_H_indices, Xtail)
+
+    # optimizer = optim.Adam([Xtrsf_H], lr=lr, betas=(beta1, beta2))
+
+    # # optimizing style transfer equation
+    # for e in range(epochs):
+        # optimizer.zero_grad()
+        # loss = constraints(Xtrsf_H, Xtrsf_H_indices, Xtail)
+        # loss.backward()
+        # optimizer.step()
+        # if e % 10 == 0:
+            # print("epoch: ", e, "loss: ", round(loss.item()))
+
+    # with torch.no_grad():
+        # Xtrsf = net(Xtrsf_H, unpool_indices=Xtrsf_H_indices, decode=True)
+
+    # Xtrsf = (Xtrsf * preprocess['Xstd']) + preprocess['Xmean']
