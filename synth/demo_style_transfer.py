@@ -61,11 +61,14 @@ lr = 0.01
 beta1 = 0.9
 beta2 = 0.999
 batchsize = 1
+epochs = 100
 
 net = create_core()
 net.to(device)
 
 net.load_state_dict(torch.load("model/network_core.pth", map_location=device))
+
+net.eval()
 
 for content_clip, content_database, style_clip, style_database, style_amount in pairings:
     
@@ -86,22 +89,36 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     S.to(device)
     C.to(device)
 
-    # encoding S and C
-    phi_S, phi_S_indices = net(S, encode=True)
-    phi_C, phi_C_indices = net(C, encode=True)
-
-    # computing gram matrix of encoded S
-    g_phi_S = compute_gram(phi_S)
-
     # N is white noise
     N = np.random.normal(size=C.shape)
     N = (torch.from_numpy(N)).double()
     N.to(device)
 
+    # encoding S and C
+    with torch.no_grad():
+        phi_S, phi_S_indices = net(S, encode=True)
+        phi_C, phi_C_indices = net(C, encode=True)
+        H, H_indices = net(N, encode=True)
+
+    # computing gram matrix of encoded S
+    g_phi_S = compute_gram(phi_S)
+
     # H is the hidden units that need to be learned to minimize styletransfer
-    H, H_indices = net(N, encode=True)
     H.requires_grad_()
 
-    # loss = styletransfer(H, g_phi_S, phi_C, style_amount)
-    # optimizer = optim.Adam(H)
+    optimizer = optim.Adam([H], lr=lr, betas=(beta1, beta2))
 
+    # optimizing style transfer equation
+    for e in range(epochs):
+        optimizer.zero_grad()
+        loss = styletransfer(H, g_phi_S, phi_C, style_amount)
+        loss.backward()
+        optimizer.step()
+        if e % 10 == 0:
+            print("epoch: ", e, "loss: ", round(loss.item()))
+    
+    # decoding the learned hidden unit H
+    with torch.no_grad():
+        Xtrsf = net(H, unpool_indices=H_indices, decode=True)
+
+    Xtrsf = (Xtrsf * preprocess['Xstd']) + preprocess['Xmean']
