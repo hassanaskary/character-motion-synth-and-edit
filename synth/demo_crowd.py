@@ -108,7 +108,7 @@ for scene, cstart, cend in scenes:
         loss = constraints(core, X_H, X_H_indices, preprocess, labels=Xtail[:,-4:], traj=Xtail[:,:3], to_run=("foot", "bone", "traj"))
         loss.backward()
         optimizer.step()
-        if e % 10 == 0:
+        if e % 2 == 0:
             print("epoch: ", e, "loss: ", loss.item())
 
     with torch.no_grad():
