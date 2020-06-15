@@ -92,6 +92,9 @@ for scene, cstart, cend in scenes:
 
     X = (torch.from_numpy(X)).double()
     X = X.to(device)
+    
+    Xtail = (torch.from_numpy(Xtail)).double()
+    Xtail = Xtail.to(device)
 
     with torch.no_grad():
         X_H, X_H_indices = core(X, encode=True)

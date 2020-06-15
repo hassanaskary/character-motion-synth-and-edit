@@ -21,7 +21,7 @@ def foot_constraint(V, labels):
     offsets = torch.cat([
         V[:, feet[:, 0:1]],
         torch.zeros(
-            (V.size(0), len(feet), 1, V.size(2)), dtype=torch.double), V[:, feet[:, 2:3]]
+            (V.size(0), len(feet), 1, V.size(2)), dtype=torch.double).to(device), V[:, feet[:, 2:3]]
     ], dim=2)
 
     def cross(A, B):
@@ -33,7 +33,7 @@ def foot_constraint(V, labels):
 
     neg_V = torch.unsqueeze(-V[:, -5], 1)
     neg_V = torch.unsqueeze(neg_V, 1)
-    rotation = neg_V * cross(torch.tensor([[[0, 1, 0]]], dtype=torch.double), offsets)
+    rotation = neg_V * cross(torch.tensor([[[0, 1, 0]]], dtype=torch.double).to(device), offsets)
 
     velocity_scale = 10
 
@@ -63,7 +63,7 @@ def foot_constraint(V, labels):
     cost_feet_h = 10.0 * torch.mean(
             torch.min(
                 V[:,feet[:,1],1:], 
-                torch.zeros(V[:,feet[:,1],1:].size(), dtype=torch.double)
+                torch.zeros(V[:,feet[:,1],1:].size(), dtype=torch.double).to(device)
             )**2
     )
 
@@ -71,10 +71,10 @@ def foot_constraint(V, labels):
 
 
 def bone_constraint(V, parents=torch.tensor([-1, 0, 1, 2, 3, 4, 1, 6, 7, 8, 1, 10, 11, 12, 12, 14, 15, 16, 12, 18, 19, 20]), lengths=torch.tensor([2.40, 7.15, 7.49, 2.36, 2.37, 7.43, 7.50, 2.41, 2.04, 2.05, 1.75, 1.76, 2.90, 4.98, 3.48, 0.71, 2.73, 5.24, 3.44, 0.62])):
-    J = V[:, :-7].view((V.size(0), len(parents), 3, V.size(2))).double()
+    J = V[:, :-7].view((V.size(0), len(parents), 3, V.size(2))).double().to(device)
     
     lengths = torch.unsqueeze(lengths, 1)
-    lengths = torch.unsqueeze(lengths, 0).double()
+    lengths = torch.unsqueeze(lengths, 0).double().to(device)
 
     return torch.mean((
             torch.sqrt(torch.sum((J[:, 2:] - J[:, parents[2:]])**2, dim=2)) -
@@ -97,20 +97,16 @@ def constraints(net, X, X_indices, preprocess, labels=0, traj=0, to_run=("foot",
     V = net(X, unpool_indices=X_indices, decode=True)
     V = (V * preprocess_Xstd_torch) + preprocess_Xmean_torch
 
-    V = V.to("cpu")
-
     foot = 0
     bone = 0
     traj = 0
     
     for choice in to_run:
         if choice == "foot":
-            labels = labels.to("cpu")
             foot += foot_constraint(V, labels)
         elif choice == "bone":
             bone += bone_constraint(V)
         elif choice == "traj":
-            traj = traj.to("cpu")
             traj += traj_constraint(V, traj)
 
     loss = (foot + bone + traj) / len(to_run)

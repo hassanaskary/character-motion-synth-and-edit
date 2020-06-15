@@ -91,12 +91,15 @@ for index, length in indices:
     Torig = Torig.cpu().detach().numpy()
 
     Xrecn = (Xrecn * preprocess['Xstd']) + preprocess['Xmean']
-    Xtraj = ((Torig * preprocess['Xstd'][:,-7:]) + preprocess['Xmean'][:,-7:]).clone()
+    Xtraj = ((Torig * preprocess['Xstd'][:,-7:]) + preprocess['Xmean'][:,-7:]).copy()
 
     Xnonc = Xrecn.copy()
 
     Xrecn = (torch.from_numpy(Xrecn)).double()
     Xrecn = Xrecn.to(device)
+
+    Xtraj = (torch.from_numpy(Xtraj)).double()
+    Xtraj = Xtraj.to(device)
 
     with torch.no_grad():
         Xrecn_H, Xrecn_H_indices = core(Xrecn, encode=True)
@@ -117,6 +120,7 @@ for index, length in indices:
         Xrecn = core(Xrecn_H, unpool_indices=Xrecn_H_indices, decode=True)
 
     Xrecn = Xrecn.cpu().detach().numpy()
+    Xtraj = Xtraj.cpu().detach().numpy()
 
     Xrecn[:,-7:] = Xtraj
     
