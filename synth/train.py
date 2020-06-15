@@ -69,7 +69,7 @@ for e in range(epochs):
 
     for batch in tqdm(X, desc="Iterations"): 
         batch = batch.view(1, batch.size(0), batch.size(1))
-        batch.to(device)
+        batch = batch.to(device)
         out = net(batch)
         optimizer.zero_grad()
         loss = criterionMSE(out, batch)

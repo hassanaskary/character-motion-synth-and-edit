@@ -84,15 +84,15 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
 
     S = (torch.from_numpy(S)).double()
     C = (torch.from_numpy(C)).double()
-    S.to(device)
-    C.to(device)
+    S = S.to(device)
+    C = C.to(device)
 
     # optimizng the style function
 
     # N is white noise
     N = np.random.normal(size=C.shape)
     N = (torch.from_numpy(N)).double()
-    N.to(device)
+    N = N.to(device)
 
     # encoding S and C
     with torch.no_grad():
@@ -139,10 +139,10 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     Xtrsf = (Xtrsf - preprocess['Xmean']) / preprocess['Xstd']
 
     Xtrsf = (torch.from_numpy(Xtrsf)).double()
-    Xtrsf.to(device)
+    Xtrsf = Xtrsf.to(device)
 
     Xtail = (torch.from_numpy(Xtail)).double()
-    Xtail.to(device)
+    Xtail = Xtail.to(device)
 
     with torch.no_grad():
         Xtrsf_H, Xtrsf_H_indices = net(Xtrsf, encode=True)

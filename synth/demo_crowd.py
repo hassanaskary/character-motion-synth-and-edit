@@ -54,7 +54,7 @@ for scene, cstart, cend in scenes:
     T = np.concatenate([T, np.zeros((T.shape[0], 4, T.shape[2]))], axis=1)
 
     T = (torch.from_numpy(T)).double()
-    T.to(device)
+    T = T.to(device)
 
     with torch.no_grad():
         W = footstepper(T[:,:3])
@@ -79,7 +79,7 @@ for scene, cstart, cend in scenes:
         T[i,:,mvel[i]<0.75] = 1
 
     T = (torch.from_numpy(T)).double()
-    T.to(device)
+    T = T.to(device)
 
     with torch.no_grad():
         X, X_indices = regressor(T)

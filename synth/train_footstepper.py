@@ -113,7 +113,7 @@ for e in range(epochs):
         target = target.view(1, target.size(0), target.size(1))
         batch = T[index]
         batch = batch.view(1, batch.size(0), batch.size(1))
-        batch.to(device)
+        batch = batch.to(device)
         out = net(batch)
         optimizer.zero_grad()
         loss = criterionMSE(out, target)

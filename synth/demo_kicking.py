@@ -30,7 +30,7 @@ feet = np.array([9,10,11,12,13,14,21,22,23,24,25,26])
 Y = X[:,feet]
 
 Y = (torch.from_numpy(Y)).double()
-Y.to(device)
+Y = Y.to(device)
 
 print("====================\nPreprocessing Complete\n====================")
 
@@ -62,7 +62,7 @@ for i in range(len(X)):
     Xrecn = (Xrecn * preprocess['Xstd']) + preprocess['Xmean']
 
     Xrecn = (torch.from_numpy(Xrecn)).double()
-    Xrecn.to(device)
+    Xrecn = Xrecn.to(device)
 
     with torch.no_grad():
         Xrecn_H, Xrecn_H_indices = net(Xrecn, encode=True)
