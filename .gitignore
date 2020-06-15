@@ -1,3 +1,4 @@
 data/
 synth/model/
 synth/__pycache__/
+synth/motion/__pycache__/

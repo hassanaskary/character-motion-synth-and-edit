@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from network import create_core
 from utils import compute_gram
+from AnimationPlot import animation_plot
 
 rng = np.random.RandomState(23455)
 
@@ -266,3 +267,11 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
         Xtrsf = net(Xtrsf_H, unpool_indices=Xtrsf_H_indices, decode=True)
 
     Xtrsf = (Xtrsf * preprocess['Xstd']) + preprocess['Xmean']
+
+    Xtrsf[:, -7:] = Xtail
+
+    Xstyl = np.concatenate([Xstyl, Xstyl], axis=2)
+
+    Xtrsf = Xtrsf.cpu().detach().numpy()
+
+    animation_plot([Xstyl, Xcntn, Xtrsf], interval=15.15)
