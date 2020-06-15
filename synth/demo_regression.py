@@ -4,7 +4,6 @@ import torch.optim as optim
 
 from network import create_core, create_regressor, create_footstepper
 from constraints import foot_constraint, bone_constraint, traj_constraint, constraints
-from utils import compute_gram
 from AnimationPlot import animation_plot
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")

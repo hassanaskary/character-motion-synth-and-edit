@@ -4,7 +4,6 @@ import torch.optim as optim
 
 from network import create_core, create_regressor
 from constraints import foot_constraint, bone_constraint, traj_constraint, constraints
-from utils import compute_gram
 from AnimationPlot import animation_plot
 
 rng = np.random.RandomState(23455)
