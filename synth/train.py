@@ -8,6 +8,7 @@ from tqdm import tqdm
 from network import create_core
 
 rng = np.random.RandomState(23456)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 Xcmu = np.load('../data/processed/data_cmu.npz')['clips']
 Xhdm05 = np.load('../data/processed/data_hdm05.npz')['clips']
@@ -42,10 +43,10 @@ I = np.arange(len(X))
 rng.shuffle(I); X = X[I]
 
 X = (torch.from_numpy(X)).double()
+X = X.to(device)
 
 print("====================\nPreprocessing Complete\n====================")
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 batch_size = 1
 epochs = 100
 lr = 0.001

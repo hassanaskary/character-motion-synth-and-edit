@@ -8,6 +8,7 @@ from tqdm import tqdm
 from network import create_core, create_regressor
 
 rng = np.random.RandomState(23455)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 data = np.load('../data/processed/data_edin_locomotion.npz')['clips']
 preprocess = np.load('preprocess_core.npz')
@@ -34,11 +35,13 @@ X, Y = X[I], Y[I] # Y is input and X is target
 X = (torch.from_numpy(X)).double() # target
 Y = (torch.from_numpy(Y)).double() # input
 
+X = X.to(device)
+Y = Y.to(device)
+
 print("input", Y.size(), "target", X.size())
 
 print("====================\nPreprocessing Complete\n====================")
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 batchsize = 1
 epochs = 250 
 lr = 0.001

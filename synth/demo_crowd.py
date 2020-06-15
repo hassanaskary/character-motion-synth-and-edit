@@ -68,7 +68,6 @@ for scene, cstart, cend in scenes:
     stepvar = 1.0+0.05*rng.uniform(low=-1,high=1,size=(T.shape[0],1,1))
     thesvar = 0.05*rng.uniform(low=-1,high=1,size=(T.shape[0],1,1))
 
-
     T[:,3:4] = (np.sin(np.cumsum(W[:,0:1]*stepvar,axis=2)+off_lh+offsetvar)>thesvar+np.cos(W[:,1:2])).astype(np.float)*2-1
     T[:,4:5] = (np.sin(np.cumsum(W[:,0:1]*stepvar,axis=2)+off_lt+offsetvar)>thesvar+np.cos(W[:,2:3])).astype(np.float)*2-1
     T[:,5:6] = (np.sin(np.cumsum(W[:,0:1]*stepvar,axis=2)+off_rh+offsetvar)>thesvar+np.cos(W[:,3:4])).astype(np.float)*2-1
@@ -85,8 +84,14 @@ for scene, cstart, cend in scenes:
         X, X_indices = regressor(T)
         X = core(X, X_indices, decode=True)
 
+    X = X.cpu().detach().numpy()
+    T = T.cpu().detach().numpy()
+
     X = (X * preprocess['Xstd']) + preprocess['Xmean']
     Xtail = (T * preprocess['Xstd'][:,-7:]) + preprocess['Xmean'][:,-7:]
+
+    X = (torch.from_numpy(X)).double()
+    X = X.to(device)
 
     with torch.no_grad():
         X_H, X_H_indices = core(X, encode=True)

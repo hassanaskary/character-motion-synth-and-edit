@@ -166,12 +166,13 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     with torch.no_grad():
         Xtrsf = net(Xtrsf_H, unpool_indices=Xtrsf_H_indices, decode=True)
 
+    Xtrsf = Xtrsf.cpu().detach().numpy()
+    Xtail = Xtail.cpu().detach().numpy()
+
     Xtrsf = (Xtrsf * preprocess['Xstd']) + preprocess['Xmean']
 
     Xtrsf[:, -7:] = Xtail
 
     Xstyl = np.concatenate([Xstyl, Xstyl], axis=2)
-
-    Xtrsf = Xtrsf.cpu().detach().numpy()
 
     animation_plot([Xstyl, Xcntn, Xtrsf], interval=15.15)

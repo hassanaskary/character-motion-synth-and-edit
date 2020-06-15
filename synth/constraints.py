@@ -1,6 +1,8 @@
 import torch
 from utils import compute_gram
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # eq 14 in 7.2
 def style_transfer(H, g_phi_S, phi_C, style_amount):
     s, c = style_amount, 1.0
@@ -14,12 +16,12 @@ def style_transfer(H, g_phi_S, phi_C, style_amount):
 def foot_constraint(V, labels):
     feet = torch.tensor([[12, 13, 14], [15, 16, 17], [24, 25, 26],
                          [27, 28, 29]])
-    contact = (labels > 0.5)
+    contact = (labels > 0.5).double()
 
     offsets = torch.cat([
         V[:, feet[:, 0:1]],
         torch.zeros(
-            (V.size(0), len(feet), 1, V.size(2))).double(), V[:, feet[:, 2:3]]
+            (V.size(0), len(feet), 1, V.size(2)), dtype=torch.double), V[:, feet[:, 2:3]]
     ], dim=2)
 
     def cross(A, B):
@@ -31,7 +33,7 @@ def foot_constraint(V, labels):
 
     neg_V = torch.unsqueeze(-V[:, -5], 1)
     neg_V = torch.unsqueeze(neg_V, 1)
-    rotation = neg_V * cross(torch.tensor([[[0, 1, 0]]]), offsets)
+    rotation = neg_V * cross(torch.tensor([[[0, 1, 0]]], dtype=torch.double), offsets)
 
     velocity_scale = 10
 
@@ -69,10 +71,10 @@ def foot_constraint(V, labels):
 
 
 def bone_constraint(V, parents=torch.tensor([-1, 0, 1, 2, 3, 4, 1, 6, 7, 8, 1, 10, 11, 12, 12, 14, 15, 16, 12, 18, 19, 20]), lengths=torch.tensor([2.40, 7.15, 7.49, 2.36, 2.37, 7.43, 7.50, 2.41, 2.04, 2.05, 1.75, 1.76, 2.90, 4.98, 3.48, 0.71, 2.73, 5.24, 3.44, 0.62])):
-    J = V[:, :-7].view((V.size(0), len(parents), 3, V.size(2)))
+    J = V[:, :-7].view((V.size(0), len(parents), 3, V.size(2))).double()
     
     lengths = torch.unsqueeze(lengths, 1)
-    lengths = torch.unsqueeze(lengths, 0)
+    lengths = torch.unsqueeze(lengths, 0).double()
 
     return torch.mean((
             torch.sqrt(torch.sum((J[:, 2:] - J[:, parents[2:]])**2, dim=2)) -
@@ -89,8 +91,13 @@ def constraints(net, X, X_indices, preprocess, labels=0, traj=0, to_run=("foot",
     preprocess_Xstd_torch = (torch.from_numpy(preprocess['Xstd'])).double()
     preprocess_Xmean_torch = (torch.from_numpy(preprocess['Xmean'])).double()
 
+    preprocess_Xstd_torch = preprocess_Xstd_torch.to(device)
+    preprocess_Xmean_torch = preprocess_Xmean_torch.to(device)
+
     V = net(X, unpool_indices=X_indices, decode=True)
     V = (V * preprocess_Xstd_torch) + preprocess_Xmean_torch
+
+    V = V.to("cpu")
 
     foot = 0
     bone = 0
@@ -98,10 +105,12 @@ def constraints(net, X, X_indices, preprocess, labels=0, traj=0, to_run=("foot",
     
     for choice in to_run:
         if choice == "foot":
+            labels = labels.to("cpu")
             foot += foot_constraint(V, labels)
         elif choice == "bone":
             bone += bone_constraint(V)
         elif choice == "traj":
+            traj = traj.to("cpu")
             traj += traj_constraint(V, traj)
 
     loss = (foot + bone + traj) / len(to_run)

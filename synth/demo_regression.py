@@ -66,8 +66,10 @@ for index, length in indices:
     Torig = (torch.from_numpy(Torig)).double()
     Torig = Torig.to(device)
 
-    W = footstepper(Torig[:,:3])
+    with torch.no_grad():
+        W = footstepper(Torig[:,:3])
 
+    Torig = Torig.cpu().detach().numpy()
     W = W.cpu().detach().numpy()
 
     W = (W * preprocess_footstepper['Wstd']) + preprocess_footstepper['Wmean']
@@ -81,10 +83,12 @@ for index, length in indices:
     Torig = (torch.from_numpy(Torig)).double()
     Torig = Torig.to(device)
 
-    Xrecn, Xrecn_H = regressor(Torig)
-    Xrecn = core(Xrecn, Xrecn_H, decode=True)
+    with torch.no_grad():
+        Xrecn, Xrecn_H = regressor(Torig)
+        Xrecn = core(Xrecn, Xrecn_H, decode=True)
 
     Xrecn = Xrecn.cpu().detach().numpy()
+    Torig = Torig.cpu().detach().numpy()
 
     Xrecn = (Xrecn * preprocess['Xstd']) + preprocess['Xmean']
     Xtraj = ((Torig * preprocess['Xstd'][:,-7:]) + preprocess['Xmean'][:,-7:]).clone()

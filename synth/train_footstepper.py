@@ -8,6 +8,7 @@ from tqdm import tqdm
 from network import create_footstepper
 
 rng = np.random.RandomState(23455)
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 data = np.load('../data/processed/data_edin_locomotion.npz')['clips']
 preprocess = np.load('preprocess_core.npz')
@@ -82,11 +83,13 @@ T, F, W = T[I], F[I], W[I]
 T = (torch.from_numpy(T)).double() # input
 W = (torch.from_numpy(W)).double() # target
 
+T = T.to(device)
+W = W.to(device)
+
 print("input", T.size(), "target", W.size())
 
 print("====================\nPreprocessing Complete\n====================")
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 batchsize = 1
 epochs = 100 
 lr = 0.001

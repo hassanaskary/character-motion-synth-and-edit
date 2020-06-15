@@ -52,8 +52,9 @@ net.eval()
 regressor.eval()
 
 for i in range(len(X)):
-    Xrecn, Xrecn_indices = regressor(Y[i:i+1])
-    Xrecn = net(Xrecn, Xrecn_indices, decode=True)
+    with torch.no_grad():
+        Xrecn, Xrecn_indices = regressor(Y[i:i+1])
+        Xrecn = net(Xrecn, Xrecn_indices, decode=True)
 
     Xorig = np.array(X[i:i+1])
     Xorig = (Xorig * preprocess['Xstd']) + preprocess['Xmean']
@@ -82,7 +83,7 @@ for i in range(len(X)):
     with torch.no_grad():
         Xrecn = net(Xrecn_H, unpool_indices=Xrecn_H_indices, decode=True)
 
-    Xrecn = (Xrecn * preprocess['Xstd']) + preprocess['Xmean']
     Xrecn = Xrecn.cpu().detach().numpy()
+    Xrecn = (Xrecn * preprocess['Xstd']) + preprocess['Xmean']
 
     animation_plot([Xorig, Xrecn], interval=15.15)
