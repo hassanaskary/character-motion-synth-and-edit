@@ -153,7 +153,7 @@ lr = 0.01
 beta1 = 0.9
 beta2 = 0.999
 batchsize = 1
-epochs = 5
+epochs = 100
 
 net = create_core()
 net.to(device)
@@ -216,7 +216,7 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
         loss_style = styletransfer(H, g_phi_S, phi_C, style_amount)
         loss_style.backward()
         optimizer_style.step()
-        if e % 2 == 0:
+        if e % 10 == 0:
             print("epoch: ", e, "loss: ", loss_style.item())
 
     # decoding the learned hidden unit H
@@ -260,7 +260,7 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
         loss_constraint = constraints(Xtrsf_H, Xtrsf_H_indices, Xtail[:, -4:], Xtail[:, :3])
         loss_constraint.backward()
         optimizer_constraint.step()
-        if e % 2 == 0:
+        if e % 10 == 0:
             print("epoch: ", e, "loss: ", loss_constraint.item())
 
     with torch.no_grad():
