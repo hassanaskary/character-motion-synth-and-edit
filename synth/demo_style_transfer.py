@@ -157,7 +157,7 @@ for content_clip, content_database, style_clip, style_database, style_amount in 
     # optimizing style transfer equation
     for e in range(epochs):
         optimizer_constraint.zero_grad()
-        loss_constraint = constraints(net, Xtrsf_H, Xtrsf_H_indices, preprocess, Xtail[:, -4:], Xtail[:, :3])
+        loss_constraint = constraints(net, Xtrsf_H, Xtrsf_H_indices, preprocess, labels=Xtail[:, -4:], traj=Xtail[:, :3], to_run=("foot", "bone", "traj"))
         loss_constraint.backward()
         optimizer_constraint.step()
         if e % 10 == 0:

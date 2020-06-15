@@ -15,20 +15,20 @@ preprocess = np.load('preprocess_core.npz')
 
 print("====================\nDataset Loaded\n====================")
 
-data_punching = np.hstack([np.arange(259, 303), np.arange(930, 978), np.arange(1650,1703), np.arange(2243,2290), np.arange(2851,2895)])
-rng.shuffle(data_punching)
+data_kicking = np.hstack([np.arange(199, 246), np.arange(862, 906), np.arange(1582,1640), np.arange(2188,2233), np.arange(2796,2844)])
+rng.shuffle(data_kicking)
 
-punching_train = data_punching[:len(data_punching)//2]
-punching_valid = data_punching[len(data_punching)//2:]
+kicking_train = data_kicking[:len(data_kicking)//2]
+kicking_valid = data_kicking[len(data_kicking)//2:]
 
-X = data['clips'][punching_valid]
+X = data['clips'][kicking_valid]
 X = np.swapaxes(X, 1, 2)
 
 X = (X - preprocess['Xmean']) / preprocess['Xstd']
 
-hands = np.array([60,61,62,48,49,50])
+feet = np.array([9,10,11,12,13,14,21,22,23,24,25,26])
 
-Y = X[:,hands]
+Y = X[:,feet]
 
 Y = (torch.from_numpy(Y)).double()
 Y.to(device)
@@ -47,7 +47,7 @@ net = create_core()
 net.to(device)
 
 net.load_state_dict(torch.load("model/network_core.pth", map_location=device))
-regressor.load_state_dict(torch.load("model/network_regression_punch.pth", map_location=device))
+regressor.load_state_dict(torch.load("model/network_regression_kick.pth", map_location=device))
 
 net.eval()
 regressor.eval()

@@ -85,7 +85,7 @@ def traj_constraint(V, traj):
 
 
 # eq 13 in 7.1
-def constraints(net, X, X_indices, preprocess, labels, traj, to_run=("foot", "bone", "traj")):
+def constraints(net, X, X_indices, preprocess, labels=0, traj=0, to_run=("foot", "bone", "traj")):
     preprocess_Xstd_torch = (torch.from_numpy(preprocess['Xstd'])).double()
     preprocess_Xmean_torch = (torch.from_numpy(preprocess['Xmean'])).double()
 
