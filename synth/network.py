@@ -36,11 +36,11 @@ class Core(nn.Module):
         # when RECONSTRUCTING only provide input tensor. leave all other
         # arguments as is
 
-        # when DECODING provide input tensor, indices, and set decode to True
-        # leave encode to be False
+        # when DECODING provide input tensor with 256 channels, indices, and set decode to True
+        # leave encode to be False. It will return tensor of size (73, 240)
 
-        # when ENCODING provide input tensor, and set encode to True, leave 
-        # the rest as is
+        # when ENCODING provide input tensor with 73 channels, and set encode to True, leave 
+        # the rest as is. It will return a tensor of size (256, 120)
         if decode:
             x = self.unpool(x, unpool_indices)
             x = self.decoder(x)
