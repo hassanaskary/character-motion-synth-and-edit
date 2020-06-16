@@ -46,9 +46,9 @@ for i in range(10):
     i1 = []
     i2 = []
     for i in range(256):
-        i0.append(torch.linspace(0, 237, steps=120, dtype=torch.int64))
-        i1.append(torch.linspace(1, 238, steps=120, dtype=torch.int64))
-        i2.append(torch.linspace(2, 239, steps=120, dtype=torch.int64))
+        i0.append(torch.linspace(0, 237, steps=120).type(torch.int64))
+        i1.append(torch.linspace(1, 238, steps=120).type(torch.int64))
+        i2.append(torch.linspace(2, 239, steps=120).type(torch.int64))
     b_0_indices = torch.stack(i0, dim=0)
     b_0_indices = torch.unsqueeze(b_0_indices, 0).to(device)
     b_1_indices = torch.stack(i1, dim=0)
