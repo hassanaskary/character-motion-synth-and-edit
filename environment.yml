@@ -1,0 +1,9 @@
+name: py37-char-motion-synth-and-edit
+channels:
+  - defaults
+dependencies:
+  - python=3.7
+  - torchvision
+  - pytorch
+  - tqdm
+  - matplotlib
