@@ -1,6 +1,6 @@
 # PyTorch Re-implementation of "A Deep Learning Framework for Character Motion Synthesis and Editing"
 
-Re-implementation of the method introduced in the paper titled [A Deep Learning Framework for Character Motion Synthesis and Editing](https://theorangeduck.com/page/deep-learning-framework-character-motion-synthesis-and-editing) in PyTorch.
+Re-implementation of the method introduced in the paper titled [A Deep Learning Framework for Character Motion Synthesis and Editing](https://theorangeduck.com/page/deep-learning-framework-character-motion-synthesis-and-editing) in PyTorch. The original code provided by the authors was in Theano which can found [here](https://theorangeduck.com/media/uploads/other_stuff/motionsynth_code.zip).
 
 ## Prerequisites
 1. Python 3.7
